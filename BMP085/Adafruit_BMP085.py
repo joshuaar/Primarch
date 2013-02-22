@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import time
-from Adafruit_I2C import Adafruit_I2C
+from i2c import *
 
 # ===========================================================================
 # BMP085 Class
