@@ -1,14 +1,14 @@
 #!/usr/bin/python
 
 import smbus
-
+SMBUS=1
 # ===========================================================================
 # Adafruit_I2C Base Class
 # ===========================================================================
 
 class Adafruit_I2C :
 
-  def __init__(self, address, bus=smbus.SMBus(0), debug=False):
+  def __init__(self, address, bus=smbus.SMBus(SMBUS), debug=False):
     self.address = address
     self.bus = bus
     self.debug = debug
