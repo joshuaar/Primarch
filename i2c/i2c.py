@@ -5,10 +5,10 @@ SMBUS=1
 # ===========================================================================
 # Adafruit_I2C Base Class
 # ===========================================================================
-
+theBus = smbus.SMBus(SMBUS)
 class Adafruit_I2C :
 
-  def __init__(self, address, bus=smbus.SMBus(SMBUS), debug=False):
+  def __init__(self, address, bus=theBus, debug=False):
     self.address = address
     self.bus = bus
     self.debug = debug
@@ -79,7 +79,7 @@ class Adafruit_I2C :
     except IOError, err:
       print "Error accessing 0x%02X: Check your I2C address" % self.address
       return -1
-
+    
   def readS16(self, reg):
     "Reads a signed 16-bit value from the I2C device"
     try:
@@ -87,6 +87,19 @@ class Adafruit_I2C :
       if (hibyte > 127):
         hibyte -= 256
       result = (hibyte << 8) + self.bus.read_byte_data(self.address, reg+1)
+      if (self.debug):
+        print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
+      return result
+    except IOError, err:
+      print "Error accessing 0x%02X: Check your I2C address" % self.address
+      return -1
+  def readS16Rev(self, reg): # reverse read order for lsb/msb
+    "Reads a signed 16-bit value from the I2C device"
+    try:
+      hibyte = self.bus.read_byte_data(self.address, reg+1)
+      if (hibyte > 127):
+        hibyte -= 256
+      result = (hibyte << 8) + self.bus.read_byte_data(self.address, reg)
       if (self.debug):
         print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
       return result
