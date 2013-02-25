@@ -30,7 +30,7 @@ class imu:
     def getAcc(self): # euclidian force vector
         return np.array(self.acc.getAxes())    
 
-lag=100
+lag=2
 
 def complementary(eul):
     euler = np.array(eul)
@@ -45,7 +45,7 @@ def complementary(eul):
         G = i.getG()
         #euler = 0.98*(euler + wtdt) + np.append(0.02*(G),0)
         euler = euler + wtdt
-        if c == 9:
+        if c == 0:
             eul[0] = euler[0]
             eul[1] = euler[1]
             eul[2] = euler[2] # Ship some values to the client
