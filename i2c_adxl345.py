@@ -285,3 +285,6 @@ class i2c_adxl345:
                 
 if __name__=="__main__":
         i=i2c_adxl345()
+        while True:
+                print i.getAxes()
+                sleep(1)
