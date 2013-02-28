@@ -27,7 +27,7 @@ class imu:
         raw = self.getAcc()
         heading =self.getHeading()
         a=-np.arctan2(raw[1],raw[2])
-        b=-np.arctan2(raw[0],raw[2])
+        b=np.arctan2(raw[0],raw[2])
         #print time.time()-ti
         return np.array((a,b))
     def getAcc(self): # euclidian force vector
@@ -37,11 +37,11 @@ class imu:
         return out/np.linalg.norm(out)
     def getHeading(self):
         out = np.array(self.mag.getAxes())
-        out[2] = -out[2]
-        tmp = out[1]
-        out[1] = out[0]
-        out[0] = tmp
-        out[0] = -out[0]
+        #out[2] = -out[2]
+        #tmp = out[1]
+        #out[1] = out[0]
+        #out[0] = tmp
+        #out[0] = -out[0]
         #out[0] += 20
         #out[1] += 43
         #out[2] += 39 # Magnet offsets
@@ -51,6 +51,23 @@ lag=50
 def kalman():
     X = np.array((1,1,1,1))
     pass
+def wrapMag(angle):
+    return angle
+    pi = math.pi
+    if angle > pi:
+        angle -= (2*pi)
+    if angle < -pi:
+        angle += (2*pi)
+    if angle < 0:
+        angle += 2*pi
+    return angle
+def fixMag(bx,by,bz,pitch,roll):
+        Xh = bx*math.cos(pitch) + by*math.sin(roll) * math.sin(pitch) + bz * math.cos(roll) * math.sin(pitch)
+        Yh = by * math.cos(roll) - bz*math.sin(roll)
+        return wrapMag(math.atan2(-Yh,Xh))
+
+
+    
 
 def complementary(eul):
     euler = np.array(eul)
@@ -68,17 +85,12 @@ def complementary(eul):
         euler = euler + wtdt
         Bx = heading[0]
         By = heading[1]
-        Bz = heading[2]
+        Bz = -heading[2]
         pitch = euler[0]
         roll = euler[1]
         yaw = euler[2]
         Xh = Bz*math.sin(roll)-By*math.cos(pitch)
-        Yh = (
-            Bx*math.cos(pitch) +
-            By*math.sin(pitch)*math.sin(roll) +
-            Bz*math.sin(pitch)*math.cos(roll)
-            )
-        headingC = math.atan2(Yh,Xh) # Corrected Heading
+        headingC = fixMag(Bx,By,Bz,roll,pitch) # Corrected Heading
         if c == 0:
             if __name__=="__main__":
                 #print time.time()-tx
@@ -88,6 +100,7 @@ def complementary(eul):
         euler[0] = 0.98*euler[0] + .02*G[0]
         euler[1] = 0.98*euler[1] + .02*G[1] # G's are mixed up...shitty
         #euler[2] = 0.98*euler[2] + 0.02*headingC
+        euler[2] = headingC
         # Complimentary filter. Easy and effective
         eul[0] = euler[0]
         eul[1] = euler[1]
@@ -147,9 +160,9 @@ i = imu()
 #euler= np.array((0,0,0))
 #complementary(euler)
 if __name__ == "__main__":
-    #complementary(np.array((0,0,0)) )
+    complementary(np.array((0,0,0)) )
     #dcm()
-    while True:
-        print i.getAcc()
-        print i.getGyro()
-        time.sleep(.5)
+    #while True:
+     #   print i.getAcc()
+      #  print i.getGyro()
+       # time.sleep(.5)
