@@ -144,7 +144,7 @@ class i2c_hmc5883l:
                 else:
                         magno_z = round(magno_z * self.scale, 4)
                         
-                return [.8*magno_x, .85*(magno_y+95), (magno_z+50)]
+                return [magno_x, magno_y, -magno_z]
                 
         
                 

@@ -13,6 +13,8 @@ class imu:
         #self.refAlt = self.getAltRef()
         self.acc = i2c_adxl345()
         self.mag = i2c_hmc5883l()
+	self.refHeading=[0,0,0]
+	self.refHeading=self.getHeading()
         self.ri = np.array((0,0,0)) # initial rotation vector pitch roll and yaw
     def getGyro(self):
         return np.array(self.gyro.get()) - self.refGyro
@@ -37,21 +39,22 @@ class imu:
         return out/np.linalg.norm(out)
     def getHeading(self):
         out = np.array(self.mag.getAxes())
-        #out[2] = -out[2]
-        #tmp = out[1]
-        #out[1] = out[0]
-        #out[0] = tmp
-        #out[0] = -out[0]
-        #out[0] += 20
-        #out[1] += 43
-        #out[2] += 39 # Magnet offsets
+        out[0] += 0
+        out[1] += 100
+        out[2] += 60 # Magnet offsets
         return out
 
 lag=50
 def kalman():
     X = np.array((1,1,1,1))
     pass
-def wrapMag(angle):
+
+def serveMag(eul):
+    while True:
+        eul[0],eul[1],eul[2]=i.mag.getAxes()
+
+
+def wrap(angle):
     return angle
     pi = math.pi
     if angle > pi:
@@ -64,11 +67,7 @@ def wrapMag(angle):
 def fixMag(bx,by,bz,pitch,roll):
         Xh = bx*math.cos(pitch) + by*math.sin(roll) * math.sin(pitch) + bz * math.cos(roll) * math.sin(pitch)
         Yh = by * math.cos(roll) - bz*math.sin(roll)
-        return wrapMag(math.atan2(-Yh,Xh))
-
-
-    
-
+        return wrap(-math.atan2(-Yh,Xh))
 def complementary(eul):
     euler = np.array(eul)
     ti = time.time()
@@ -85,7 +84,7 @@ def complementary(eul):
         euler = euler + wtdt
         Bx = heading[0]
         By = heading[1]
-        Bz = -heading[2]
+        Bz = heading[2]
         pitch = euler[0]
         roll = euler[1]
         yaw = euler[2]
@@ -94,12 +93,11 @@ def complementary(eul):
         if c == 0:
             if __name__=="__main__":
                 #print time.time()-tx
-                print euler[2],headingC,i.mag.getHeading()
+                print euler[0], euler[1], euler[2]
                 #print heading
                 #print headingC,i.mag.getHeading()
         euler[0] = 0.98*euler[0] + .02*G[0]
         euler[1] = 0.98*euler[1] + .02*G[1] # G's are mixed up...shitty
-        #euler[2] = 0.98*euler[2] + 0.02*headingC
         euler[2] = headingC
         # Complimentary filter. Easy and effective
         eul[0] = euler[0]
