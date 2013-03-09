@@ -1,17 +1,15 @@
 from IMU import i
 import itertools as it
 import numpy as np
+import time
 q = np.array((1,0,0,0))
 
-#if __name__ == "__main__":
-    
-def computeA():
-    p,q,r= i.getGyro()
-    return np.array((
-        (1,-p,-q,-r),
-        (p,1,r,-q),
-        (q,-r,1,p),
-        (r,p,-q,1)
+def computeA(p,q,r):
+    return (1./2)*np.array((
+        (0,-p,-q,-r),
+        (p,0,r,-q),
+        (q,-r,0,p),
+        (r,p,-q,0)
         ))
 
 def computeDCM(q):
@@ -24,16 +22,22 @@ def computeDCM(q):
         ))
 def frame(q,vector):
     return np.dot(computeDCM(q),vector)
-def predict(q):
-    n = lambda x: x/np.linalg.norm(x)
-    return n(np.dot(computeA(),q))
+
+def predict(qk,t0):
+    norm = lambda x: x/np.linalg.norm(x)
+    p,q,r = i.getGyro()
+    tf = time.time()
+    dt = tf-t0
+    A = computeA(p,q,r)
+    xDot = np.dot(A,qk)
+    return tf, norm(qk + xDot * dt)
     
 count = 0
 lag = 100
 while True:
     count = (count +1) % lag
-    q = predict(q)
+    t0 = time.time()
+    t0,q = predict(q,t0)
     if count == 0:
+        print q
         print "vector:",frame(q,(0,0,1))
-        print "quats:",q
-        print "gyro:",i.getGyro()
