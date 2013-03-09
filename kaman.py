@@ -94,8 +94,8 @@ bref = norm(i.getHeading())
 
 q = np.array((1,0,0,0))
 C = computeC(q,q)
-Q = Qo(0.01)
-R = Ro(0.01,0.4) # Ea: ErrAcc Eb: ErrMag
+Q = Qo(0.001)
+R = Ro(.05,1000) # Ea: ErrAcc Eb: ErrMag
 P = np.array((
     (1,1,1,1),
     (1,1,1,1),
