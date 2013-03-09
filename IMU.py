@@ -55,23 +55,29 @@ def serveMag(eul):
 
 
 def wrap(angle):
-    return angle
     pi = math.pi
     if angle > pi:
         angle -= (2*pi)
     if angle < -pi:
         angle += (2*pi)
-    if angle < 0:
-        angle += 2*pi
     return angle
 def fixMag(bx,by,bz,pitch,roll):
         Xh = bx*math.cos(pitch) + by*math.sin(roll) * math.sin(pitch) + bz * math.cos(roll) * math.sin(pitch)
         Yh = by * math.cos(roll) - bz*math.sin(roll)
         return wrap(-math.atan2(-Yh,Xh))
+def saveReadings(f = "magnet.csv"): # Saves readings to filename specified in f
+    f=open(f,mode="w")
+    while True:
+        gyr = [str(j) for j in i.getGyro()]
+        acc = [str(j) for j in i.getAcc()]
+        mag = [str(j) for j in i.getHeading()]
+        f.write(",".join(gyr + acc + mag + ["\n"]))
 def complementary(eul):
     euler = np.array(eul)
     ti = time.time()
     c = 0
+    h = True
+    headingRef = 0
     while True:
         c = (c+1) % lag
         tx = time.time()
@@ -82,6 +88,7 @@ def complementary(eul):
         heading = i.getHeading()
         #euler = 0.98*(euler + wtdt) + np.append(0.02*(G),0)
         euler = euler + wtdt
+        euler[2] = wrap(euler[2])
         Bx = heading[0]
         By = heading[1]
         Bz = heading[2]
@@ -90,15 +97,21 @@ def complementary(eul):
         yaw = euler[2]
         Xh = Bz*math.sin(roll)-By*math.cos(pitch)
         headingC = fixMag(Bx,By,Bz,roll,pitch) # Corrected Heading
-        if c == 0:
+        if h:
+	    headingRef = headingC
+	    h = False
+	if c == 0:
             if __name__=="__main__":
                 #print time.time()-tx
-                print euler[0], euler[1], euler[2]
+                print headingC, euler[2]
                 #print heading
                 #print headingC,i.mag.getHeading()
         euler[0] = 0.98*euler[0] + .02*G[0]
         euler[1] = 0.98*euler[1] + .02*G[1] # G's are mixed up...shitty
-        euler[2] = headingC
+        if abs(euler[2] - headingC) > abs(euler[2] - headingC) + 2*math.pi: # check the shorter adjustment route
+            euler[2] =wrap(0.99*euler[2] + 0.01*(headingC + 2*math.pi))
+        else:
+            euler[2] = 0.99*euler[2] + 0.01*headingC#0.99*euler[2] + .01*headingC
         # Complimentary filter. Easy and effective
         eul[0] = euler[0]
         eul[1] = euler[1]
@@ -158,9 +171,6 @@ i = imu()
 #euler= np.array((0,0,0))
 #complementary(euler)
 if __name__ == "__main__":
+    saveReadings()
     complementary(np.array((0,0,0)) )
-    #dcm()
-    #while True:
-     #   print i.getAcc()
-      #  print i.getGyro()
-       # time.sleep(.5)
+    
