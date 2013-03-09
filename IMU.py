@@ -171,6 +171,6 @@ i = imu()
 #euler= np.array((0,0,0))
 #complementary(euler)
 if __name__ == "__main__":
-    saveReadings()
+    #aveReadings()
     complementary(np.array((0,0,0)) )
     

@@ -4,8 +4,9 @@ import numpy as np
 import time
 q = np.array((1,0,0,0))
 
+#This seems to work
 def computeA(p,q,r):
-    return (1./2)*np.array((
+    return np.array((
         (0,-p,-q,-r),
         (p,0,r,-q),
         (q,-r,0,p),
@@ -31,6 +32,12 @@ def predict(qk,t0):
     A = computeA(p,q,r)
     xDot = np.dot(A,qk)
     return tf, norm(qk + xDot * dt)
+#Converts the state q to euler angles
+def quat2euler(q):
+    gx,gy,gz = frame(q,(0.,0.,1.))
+    a=-np.arctan2(gy,gz)
+    b=np.arctan2(gx,gz)
+    return a,b
     
 count = 0
 lag = 100
@@ -39,5 +46,5 @@ while True:
     t0 = time.time()
     t0,q = predict(q,t0)
     if count == 0:
-        print q
-        print "vector:",frame(q,(0,0,1))
+        print quat2euler(q)
+        #print "vector:",frame(q,(0,0,1))
