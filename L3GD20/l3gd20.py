@@ -1,6 +1,6 @@
 from smbus import SMBus
 from i2c import Adafruit_I2C
-from bitstring import BitArray
+
 import math,time
 	
 #--------------------------------
